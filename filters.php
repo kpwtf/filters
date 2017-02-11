@@ -370,69 +370,40 @@ class filters extends rcube_plugin{
 	$storage->set_flag($message->uid, $markread, NULL);
   }
 
-  function filters_searchString($msg,$stringToSearch){
-    $ret = FALSE;
+  function filters_doSearchString($pattern, $text, $ciSearch) {
+    if ($ciSearch) {
+      $pattern = strtolower($pattern);
+      $text = strtolower($text);
+    }
 
+    if (function_exists('mb_ereg_match')) {
+        return mb_ereg_match($pattern, $text);
+    }
+    else {
+        $tmp = preg_match($pattern, $text);
+        return ($tmp === 1) ? TRUE : FALSE;
+    }
+  }
+
+  function filters_searchString($msg,$stringToSearch){
     $ciSearch = $this->caseInsensitiveSearch;
     $decode_msg	= rcube_mime::decode_header((string)$msg);
 
     $stringToSearch=stripslashes($stringToSearch);
 
-    $decode_msg = addslashes($decode_msg);
-    $stringToSearch = addslashes($stringToSearch);
+    $result = $this->filters_doSearchString($stringToSearch, $decode_msg, $ciSearch);
+    if ($result !== FALSE) {
+      return TRUE;
+    } else if ($this->decodeBase64Msg === TRUE) {
+      // decode and search BASE64 msg
+      $decode_msg = rcube_mime::decode_header(base64_decode($msg));
 
-    if ($ciSearch){
-      if (function_exists('mb_stripos')){
-        $tmp = mb_stripos($decode_msg, $stringToSearch);
-      }
-      else{
-        $tmp = stripos($decode_msg, $stringToSearch);
-      }
-    }
-    else{
-      if (function_exists('mb_strpos')){
-        $tmp = mb_strpos($decode_msg, $stringToSearch);
-      }
-      else{
-        $tmp = strpos($decode_msg, $stringToSearch);
+      if ($decode_msg !== FALSE){
+        return $this->filters_doSearchString($stringToSearch, $decode_msg, $ciSearch);
       }
     }
 
-    if ($tmp !== FALSE){
-      $ret = TRUE;
-    }
-    
-    else{
-      if ($this->decodeBase64Msg === TRUE){
-        // decode and search BASE64 msg
-        $decode_msg = rcube_mime::decode_header(base64_decode($msg));
-
-        if ($decode_msg !== FALSE){
-
-          if ($ciSearch){
-            if (function_exists('mb_stripos')){
-              $tmp = mb_stripos($decode_msg, $stringToSearch);
-            }
-            else{
-              $tmp = stripos($decode_msg, $stringToSearch);
-            }
-          }
-          else{
-            if (function_exists('mb_strpos')){
-              $tmp = mb_strpos($decode_msg, $stringToSearch);
-            }
-            else{
-              $tmp = strpos($decode_msg, $stringToSearch);
-            }
-          }
-          if ($tmp !== FALSE){
-            $ret = TRUE;
-          }
-        }
-      }
-    }
-
-    return $ret;
+    return FALSE;
   }
 
 
