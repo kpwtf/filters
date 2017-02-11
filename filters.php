@@ -78,7 +78,7 @@ class filters extends rcube_plugin{
 	foreach ($arr_prefs as $key => $saved_filter){
 		// if saved destination folder exists and current folder is INBOX
 	  if (method_exists($imap,'mailbox_exists')){
-		if ($imap->mailbox_exists($saved_filter['destfolder']) && 'INBOX'==$open_mbox){
+		if ($imap->mailbox_exists($saved_filter['destfolder']) ){
 		  $saved_filter['searchstring'] = html_entity_decode($saved_filter['searchstring']);
 		  // if (!isset($saved_filter['filterpriority'])) $saved_filter['filterpriority'] = '';
 		  // destfolder#messages#filterpriority#markread
@@ -87,7 +87,7 @@ class filters extends rcube_plugin{
 		}
 	  }
 	  if (!method_exists($imap,'mailbox_exists')){
-		if ($imap->folder_exists($saved_filter['destfolder']) && 'INBOX'==$open_mbox){
+		if ($imap->folder_exists($saved_filter['destfolder']) ){
                   $saved_filter['searchstring'] = html_entity_decode($saved_filter['searchstring']);
                   // if (!isset($saved_filter['filterpriority'])) $saved_filter['filterpriority'] = '';
                   // destfolder#messages#filterpriority#markread
